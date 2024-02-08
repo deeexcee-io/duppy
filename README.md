@@ -29,7 +29,7 @@ Press CTRL+C to quit
 ```
 
 ## In Browser
-![image](https://github.com/deeexcee-io/Uploader/assets/130473605/b1a1f5dd-8735-4097-8621-77304d8ab53a)
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/4f3c4fa9-ae62-4daa-99e4-d604d10a0001)
 
 ## Command Line
 ```bash
