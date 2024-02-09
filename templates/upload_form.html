@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload new File</title>
+</head>
+<body>
+    <h1>Upload new File</h1>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Send it">
+    </form>
+    <h2>File List:</h2>
+    <ul>
+        {% for file in file_list %}
+            <li>{{ file }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Button to go to /download -->
+    <form action="/download" method="get">
+        <button type="submit">Go to Download</button>
+    </form>
+</body>
+</html>
