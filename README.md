@@ -46,6 +46,7 @@ curl -L -s -X POST -F "file=@ips.txt" https://854d-11-11-11-11.ngrok-free.app
 ```
 ## ngrok Setup if accessing over the Internet
 
+To simplify transferring over the internet to/from the local machine an ngrok free account covers all bases.
 ```
 python Uploader.py -H 127.0.0.1 -P 5000 --upload-folder C:\Uploader\Files
 
