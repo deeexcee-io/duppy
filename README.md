@@ -1,4 +1,4 @@
-# Uploader
+# duppy
 Download/Upload Python App - duppy
 
 Simple Flask App to Upload Files
