@@ -54,11 +54,21 @@ python Uploader.py -H 127.0.0.1 -P 5000 --upload-folder C:\Uploader\Files
 
 Enter Creds and you're good
 
-![image](https://github.com/deeexcee-io/Uploader/assets/130473605/30baa38a-1a2b-4d4d-a8cc-5909cbcbca1d)
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/ebd9e686-6cbc-469d-a187-3b3bec50573e)
 
-All FIles in the Current Directory will be Served and can be Downloaded if needed
+List is Dynamically Updated to show current files
 
-![image](https://github.com/deeexcee-io/Uploader/assets/130473605/48c4f295-e82b-4229-8725-a32b40a7af45)
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/5b157912-b0ae-48e8-8006-84c2f476f437)
+
+
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/8ff1ffe1-c314-4781-a520-53ea4917ceee)
+
+
+
+All FIles in the Current Directory are also Served and can be Downloaded if needed. For example transferring over an exploit/reverse shell
+
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/ab51663d-fb7a-43a1-a99f-ac444fc71f27)
+
 
 
 
