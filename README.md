@@ -56,6 +56,9 @@ Enter Creds and you're good
 
 ![image](https://github.com/deeexcee-io/Uploader/assets/130473605/30baa38a-1a2b-4d4d-a8cc-5909cbcbca1d)
 
+All FIles in the Current Directory will be Served and can be Downloaded if needed
+
+![image](https://github.com/deeexcee-io/Uploader/assets/130473605/48c4f295-e82b-4229-8725-a32b40a7af45)
 
 
 
