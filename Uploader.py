@@ -1,6 +1,6 @@
 import os
 import argparse
-from flask import Flask, request, redirect, url_for, session, Response
+from flask import Flask, request, redirect, url_for, session, Response, render_template, send_file
 from werkzeug.utils import secure_filename
 
 
@@ -9,8 +9,10 @@ Uploader.secret_key = 'XXX1234'
 
 UPLOAD_FOLDER_DEFAULT = os.getcwd()
 Uploader.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_DEFAULT
+Uploader.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip'])
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -32,16 +34,10 @@ def upload_file():
             file.save(os.path.join(Uploader.config['UPLOAD_FOLDER'], filename))
             session['filename'] = filename
             return redirect(url_for('complete'))
-            
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value="Send it">
-    </form>
-    '''
+
+    file_list = os.listdir(Uploader.config['UPLOAD_FOLDER'])
+
+    return render_template('upload_form.html', file_list=file_list)
 
 @Uploader.route('/done', methods=['GET', 'POST'])
 def complete():
@@ -59,6 +55,20 @@ def complete():
         	<button type="submit">Want to upload some more? Click Me</button>
 		</form>
     		'''.format(filename)
+
+@Uploader.route('/download')
+def file_list():
+    pwd = args.upload_folder
+    cwd = pwd
+    file_list = os.listdir(cwd)
+    return render_template('file_list.html', file_list=file_list)
+
+@Uploader.route('/download/<filename>')
+def down_file(filename):
+    pwd = args.upload_folder
+    cwd = pwd   
+    file_path = os.path.join(cwd, filename)
+    return send_file(file_path, as_attachment=True, download_name=f'{filename}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Simple Flask File Uploader')
