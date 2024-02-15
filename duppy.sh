@@ -190,7 +190,7 @@ start_gunicorn() {
 # Function to start Ngrok with basic authentication
 start_ngrok() {
     #current_user=$SUDO_USER
-    ngrok http 8000 --basic-auth="gd:SuperPassword" > /dev/null 2>&1 &
+    ngrok http 8000 --basic-auth="user:SuperPassword" > /dev/null 2>&1 &
     sleep 1
     # Check if Ngrok started successfully
     if pgrep -x "ngrok" > /dev/null; then
