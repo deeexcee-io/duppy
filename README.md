@@ -12,6 +12,8 @@ duppy.sh will ask for your ngrok auth token, get it here - https://dashboard.ngr
 
 was on a job beginning of feb where the kali box we could use was in AWS. had to port forward through a few jump boxes to get access. once on the box it had access to the internet and so wanted to securely transfer data/nessus scans back to my local machine easily. got a bit carried away with making it work and look pretty and and here we are 😂 - duppy
 
+Only tested on Kali and Kali on WSL
+
 Simple Install
 
 ```bash
