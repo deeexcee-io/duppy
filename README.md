@@ -17,5 +17,21 @@ Local files accessible with upload/download functionality
 
 ![image](https://github.com/deeexcee-io/duppy/assets/130473605/7350310a-6e14-42a1-a4af-171e32bbb978)
 
+app is protected with basic auth - update the creds in duppy.sh
 
+```
+start_ngrok() {
+    #current_user=$SUDO_USER
+    ngrok http 8000 --basic-auth="user:SuperPassword" > /dev/null 2>&1 &
+    sleep 1
+    # Check if Ngrok started successfully
+    if pgrep -x "ngrok" > /dev/null; then
+        printf "\n[$green+$NC] ngrok started successfully"
+        sleep 1
+    else
+        printf "\nngrok failed to start"
+        exit 1
+    fi
+}
+```
 
