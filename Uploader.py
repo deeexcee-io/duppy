@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 Uploader = Flask('Uploader')
 Uploader.secret_key = 'XXX1234'
 
-UPLOAD_FOLDER_DEFAULT = os.getcwd()
+UPLOAD_FOLDER_DEFAULT = os.path.join(os.getcwd(), 'upload')
 Uploader.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_DEFAULT
 Uploader.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
@@ -42,16 +42,9 @@ def complete():
     is_curl = 'curl' in user_agent
     if is_curl:
         return "File uploaded!"
-    html_content = '''
-        <!doctype html>
-        <title>Uploaded new File</title>
-        <h1>Uploaded new File {0}</h1>
-        <form action="/" method="get">
-            <button type="submit">Want to upload some more? Click Me</button>
-        </form>
-    '''.format(filename)
 
-    return Response(html_content, content_type='text/html')
+    # Render the template with the filename
+    return render_template('uploaded_file.html', filename=filename)
 
 @Uploader.route('/download')
 def file_list():
