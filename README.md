@@ -1,4 +1,4 @@
-python flask app which utilises ngrok and gunicorn to securely download and upload files to local machine over the internet.
+python flask app which utilises ngrok and gunicorn to securely download and upload files to local machine over the internet. all handled by the bash script. all dependencies will be installed.
 
 logs files that are uploaded/downloaded to the terminal
 
