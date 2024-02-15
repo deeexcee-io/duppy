@@ -13,6 +13,9 @@ wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 
 sudo bash duppy.sh
 ```
+You need a free ngrok account - https://dashboard.ngrok.com/login
+
+duppy.sh will ask for your ngrok auth token, get it here - https://dashboard.ngrok.com/get-started/your-authtoken
 
 ![image](https://github.com/deeexcee-io/duppy/assets/130473605/f72e6177-98ce-4487-9a2d-5a0340765644)
 
