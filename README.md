@@ -1,6 +1,12 @@
+# duppy
+
 python flask app which utilises ngrok and gunicorn to securely download and upload files to local machine over the internet. all handled by the bash script. all dependencies will be installed.
 
 logs files that are uploaded/downloaded to the terminal
+
+## why?
+
+was on a job beggining of febwhere the kali box we could use was in AWS. Had to port forward through a few jump boxes to get access. Once on it had internet and so wanted to securely transfer data/nessus scans back to my local machine easily.gGot a bit carried away and here we are - duppy
 
 Simple Install
 
