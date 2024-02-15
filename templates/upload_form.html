@@ -1,13 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload new File</title>
+    <title>Duppy - Upload Files</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"],
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        button {
+            background-color: #28a745;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Upload new File</h1>
+    <h1>Duppy - Upload New File</h1>
     <form method="post" enctype="multipart/form-data">
         <input type="file" name="file">
         <input type="submit" value="Send it">
@@ -15,7 +64,7 @@
     <h2>File List:</h2>
     <ul>
         {% for file in file_list %}
-            <li>{{ file }}</li>
+        <li>{{ file }}</li>
         {% endfor %}
     </ul>
 
@@ -24,4 +73,5 @@
         <button type="submit">Go to Download</button>
     </form>
 </body>
+
 </html>
