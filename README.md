@@ -4,9 +4,13 @@ python flask app which utilises ngrok and gunicorn to securely download and uplo
 
 logs files that are uploaded/downloaded to the terminal
 
+You need a free ngrok account - https://dashboard.ngrok.com/login
+
+duppy.sh will ask for your ngrok auth token, get it here - https://dashboard.ngrok.com/get-started/your-authtoken
+
 ## why?
 
-was on a job beggining of febwhere the kali box we could use was in AWS. Had to port forward through a few jump boxes to get access. Once on it had internet and so wanted to securely transfer data/nessus scans back to my local machine easily.gGot a bit carried away and here we are - duppy
+was on a job beginning of feb where the kali box we could use was in AWS. had to port forward through a few jump boxes to get access. once on the box it had access to the internet and so wanted to securely transfer data/nessus scans back to my local machine easily. got a bit carried away with making it work and look pretty and and here we are 😂 - duppy
 
 Simple Install
 
@@ -19,9 +23,7 @@ wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 
 sudo bash duppy.sh
 ```
-You need a free ngrok account - https://dashboard.ngrok.com/login
 
-duppy.sh will ask for your ngrok auth token, get it here - https://dashboard.ngrok.com/get-started/your-authtoken
 
 ![image](https://github.com/deeexcee-io/duppy/assets/130473605/f72e6177-98ce-4487-9a2d-5a0340765644)
 
