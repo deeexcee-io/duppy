@@ -5,6 +5,10 @@ logs files that are uploaded/downloaded to the terminal
 Simple Install
 
 ```bash
+python3 -m venv duppy-venv
+
+source duppy-venv/bin/activate
+
 wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 
 sudo bash duppy.sh
