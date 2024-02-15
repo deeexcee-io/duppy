@@ -1,18 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File List</title>
+    <title>Duppy - File List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #007bff;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
-    <h2>File List</h2>
-    
+    <h2>Duppy - File List</h2>
+
     <ul>
         {% for file in file_list %}
             <li><a href="{{ url_for('down_file', filename=file) }}" download>{{ file }}</a></li>
         {% endfor %}
     </ul>
+
+    <!-- Button to go back -->
+    <button onclick="goBack()">Go Back</button>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
+
 </html>
