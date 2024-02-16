@@ -25,7 +25,45 @@ wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 
 sudo bash duppy.sh
 ```
+## w/cURL
 
+```
+curl -u "user:SuperPassword" -L -s -X POST -F "file=@file1.pdf" https://cb58-11-1-11-11.ngrok-free.app
+
+|------------------------------------|
+
+┌──(gd㉿DESKTOP-RCB6DUO)-[~]
+└─$ curl -u "user:SuperPassword" -L -s -X POST -F "file=@file1.pdf" https://cb58-11-1-11-11.ngrok-free.app
+File uploaded!
+```
+
+on server
+```
+[sudo] password for gd:
+      _
+     | |
+   __| | _   _  _ __   _ __   _   _
+  / _` || | | || '_ \ | '_ \ | | | |
+ | (_| || |_| || |_) || |_) || |_| |
+  \__,_| \__,_|| .__/ | .__/  \__, |
+               | |    | |      __/ |
+               |_|    |_|     |___/
+
+download and upload python flask app
+
+wrapped with bash
+
+
+[+] Updating Package Index
+[+] Package Index Updated
+[+] ngrok and gunicorn installed......lets go
+[+] Pulling duppy repo
+[+] duppy already installed
+[+] gunicorn started
+[+] ngrok started successfully
+[+] Public URL: https://cb58-11-1-11-11.ngrok-free.app
+[+] New File Uploaded: file1.pdf
+```
 
 ![image](https://github.com/deeexcee-io/duppy/assets/130473605/f72e6177-98ce-4487-9a2d-5a0340765644)
 
