@@ -27,10 +27,13 @@ api_hist=""
 
 # Check Dependencies
 start_standardtoolcheck() {
-    if [ $(command -v curl) ] && [ $(command -v jq) ] && [ $(command -v sudo) ] && [ $(command -v git) ] && [ $(command -v pgrep) ] && [ $(command -v pip) ] && [ "$(python3 -c 'import flask' 2>/dev/null)" ]
+    if [ $(command -v curl) ] && [ $(command -v jq) ] && [ $(command -v sudo) ] && [ $(command -v git) ] && [ $(command -v pgrep) ] && [ $(command -v pip) ]
     then
+        if python3 -c 'import flask' 2>/dev/null
+        then
         printf "\n[${green}+$NC] standard tools installed......lets go"
         sleep 1
+        fi
     else
         printf "\n[${green}+$NC] Updating Package Index"
         if apt update -y > /dev/null 2>&1; then
