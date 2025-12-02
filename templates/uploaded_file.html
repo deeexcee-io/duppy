@@ -1,36 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploaded New File</title>
+    <title>Duppy · Uploaded</title>
     <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
-            color: #343a40;
-            margin: 20px;
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #eff3fb, #f9fbff);
+            color: #13264b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
         }
+
+        .card {
+            width: min(520px, 92vw);
+            border: 1px solid rgba(19, 38, 75, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            background: #fff;
+            text-align: center;
+            box-shadow: 0 25px 70px rgba(13, 22, 43, 0.12);
+        }
+
         h1 {
-            color: #007bff;
+            margin: 0 0 10px;
+            letter-spacing: 0.08em;
         }
-        form {
-            margin-top: 20px;
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
         }
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
+
+        .brand img {
+            height: 40px;
+            width: auto;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: #f06427;
+            padding: 6px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(240, 100, 39, 0.25);
+            background: rgba(240, 100, 39, 0.08);
+            white-space: nowrap;
+        }
+
+        .status {
+            margin-bottom: 22px;
+            color: rgba(19, 38, 75, 0.6);
+            letter-spacing: 0.35em;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(19, 38, 75, 0.15);
+            border-radius: 999px;
+            padding: 12px 28px;
+            background: #f4f6fb;
+            color: #13264b;
+            margin-bottom: 28px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button,
+        .link-btn {
+            border-radius: 999px;
+            padding: 11px 28px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            border: 1px solid rgba(19, 38, 75, 0.15);
+            background: transparent;
+            color: #13264b;
             cursor: pointer;
+            text-decoration: none;
+        }
+
+        .link-btn.primary {
+            border: none;
+            background: linear-gradient(120deg, #f06427, #f37a24);
+            color: #fff;
+            box-shadow: 0 15px 30px rgba(240, 100, 39, 0.2);
         }
     </style>
 </head>
+
 <body>
-    <h1>Uploaded new File {{ filename }}</h1>
-    <form action="/" method="get">
-        <button type="submit">Want to upload some more? Click Me</button>
-    </form>
+    <div class="card">
+        <div class="brand">
+            <img src="https://cdn.prod.website-files.com/5f02f2c93eab87a6ea84e2f3/61bb2e0599c8bcf1c593c4c3_CCL_LOGO_FINAL_1.svg" alt="CCL Solutions Group logo">
+            <h1 class="brand-title">duppy - download upload python app</h1>
+        </div>
+        <div class="status">uploaded</div>
+        <div class="file-chip">📄 {{ filename }}</div>
+        <div class="actions">
+            <form action="/" method="get">
+                <button type="submit">upload</button>
+            </form>
+            <a href="/download" class="link-btn primary">downloads</a>
+        </div>
+    </div>
 </body>
+
 </html>

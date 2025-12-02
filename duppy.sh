@@ -1,9 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
 blue="\033[0;94m"
 green="\033[0;92m"
+yellow="\033[0;93m"
+red="\033[0;91m"
 NC="\033[0m"
 
-cat << 'EOF'
+cat <<'EOF'
       _
      | |
    __| | _   _  _ __   _ __   _   _
@@ -19,261 +23,464 @@ wrapped with bash
 
 EOF
 
-USER_PATH="$PATH"
-USER_PYTHONPATH="$PYTHONPATH"
-
-# Variable to store Ngrok API data history
 api_hist=""
+NGROK_URL="http://127.0.0.1:4040/api/requests/http?limit=1"
+PROJECT_DIR=""
+APT_UPDATED=0
+NGROK_PID=""
+BASIC_AUTH="${DUPPY_BASIC_AUTH:-user:SuperPassword}"
+LOG_FILE="/tmp/duppy_ngrok.log"
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUN_MODE=""
+BIND_ADDRESS="127.0.0.1"
+CERT_DIR="${SCRIPT_ROOT}/.tls"
+CERT_FILE="${CERT_DIR}/duppy.crt"
+KEY_FILE="${CERT_DIR}/duppy.key"
 
-# Check Dependencies
-start_standardtoolcheck() {
-    if [ $(command -v curl) ] && [ $(command -v jq) ] && [ $(command -v sudo) ] && [ $(command -v git) ] && [ $(command -v pgrep) ] && [ $(command -v pip) ]
-    then
-        if python3 -c 'import flask' 2>/dev/null
-        then
-        printf "\n[${green}+$NC] standard tools installed......lets go"
-        sleep 1
+if [ -n "${VIRTUAL_ENV:-}" ]; then
+    VENV_DIR="${VIRTUAL_ENV%/}"
+    USING_USER_VENV=1
+else
+    VENV_DIR="${SCRIPT_ROOT}/duppy-venv"
+    USING_USER_VENV=0
+fi
+PYTHON_BIN="${VENV_DIR}/bin/python3"
+
+log_info() {
+    printf "\n[${green}+${NC}] %s" "$1"
+}
+
+log_warn() {
+    printf "\n[${yellow}*${NC}] %s" "$1"
+}
+
+log_error() {
+    printf "\n[${red}!${NC}] %s" "$1"
+}
+
+command_exists() {
+    command -v "$1" > /dev/null 2>&1
+}
+
+set_run_mode() {
+    local mode=$1
+    case "$mode" in
+        internet)
+            RUN_MODE="internet"
+            BIND_ADDRESS="127.0.0.1"
+            log_info "Internet mode selected (ngrok tunnel)"
+            ;;
+        local)
+            RUN_MODE="local"
+            BIND_ADDRESS="0.0.0.0"
+            log_info "Local network mode selected"
+            ;;
+    esac
+}
+
+choose_run_mode() {
+    if [ -n "${DUPPY_MODE:-}" ]; then
+        local normalized="${DUPPY_MODE,,}"
+        if [[ "$normalized" == "internet" || "$normalized" == "local" ]]; then
+            set_run_mode "$normalized"
+            return
+        else
+            log_error "Invalid DUPPY_MODE value '${DUPPY_MODE}'. Use 'internet' or 'local'."
+            exit 1
         fi
+    fi
+
+    while true; do
+        printf "\nSelect mode:\n  [1] Internet (ngrok tunnel)\n  [2] Local network only\n"
+        read -r -p "[?] Enter choice [1/2]: " selection
+        case "${selection:-1}" in
+            ""|1)
+                set_run_mode internet
+                return
+                ;;
+            2)
+                set_run_mode local
+                return
+                ;;
+            *)
+                log_warn "Invalid selection. Please choose 1 or 2."
+                ;;
+        esac
+    done
+}
+
+run_privileged() {
+    if command_exists sudo && [ "$EUID" -ne 0 ]; then
+        sudo "$@"
     else
-        printf "\n[${green}+$NC] Updating Package Index"
-        if apt update -y > /dev/null 2>&1; then
-           printf "\n[${green}+$NC] Package Index Updated"
-        else
-           printf "\n[${green}+$NC] Cannot Update Package Index.....Exiting"
-           exit 1
-        fi
-    fi
-
-    if [ ! $(command -v sudo) ]
-    then
-            printf "\n[${green}+$NC] sudo not installed....installing"
-            #if no sudo, likely we are root already. This (sudo) worth doing when spinning up a bare kali container
-            if apt install sudo -y > /dev/null 2>&1; then
-                printf "\n[${green}+$NC] sudo installed"
-            fi
-    fi
-
-    if [ ! $(command -v git) ]
-    then
-            printf "\n[${green}+$NC] git not installed....installing"
-            # To git clone the duppy repo
-            if apt install git -y > /dev/null 2>&1; then
-                printf "\n[${green}+$NC] git installed"
-            fi
-    fi
-
-    if [ ! $(command -v jq) ]
-        then
-            printf "\n[${green}+$NC] jq not installed....installing"
-            if apt install jq -y > /dev/null 2>&1; then
-                printf "\n[${green}+$NC] jq installed"
-            fi
-    fi
-
-    if [ ! $(command -v curl) ]
-        then
-            printf "\n[${green}+$NC] cURL not installed....installing"
-            if apt install curl -y > /dev/null 2>&1; then
-                printf "\n[${green}+$NC] cURL installed"
-            fi
-    fi
-
-    if [ ! $(command -v pgrep) ]
-        then
-             printf "\n[${green}+$NC] cURL not installed....installing"
-             if apt install procps -y > /dev/null 2>&1; then
-               printf "\n[${green}+$NC] cURL installed"
-            fi
-    fi
-
-    if [ ! $(command -v pip) ]
-        then
-             printf "\n[${green}+$NC] python pip not installed....installing"
-             if apt install pip -y > /dev/null 2>&1; then
-                printf "\n[${green}+$NC] python pip installed"
-             fi
-    fi
-
-    if ! python3 -c "import flask" &> /dev/null
-        then
-             printf "\n[${green}+$NC] python module \"flask\" not installed....installing"
-             if pip install flask > /dev/null 2>&1; then
-                 printf "\n[${green}+$NC] python \"flask\" module installed"
-             fi
+        "$@"
     fi
 }
 
-start_precheck() {
-        USER_PATH="$PATH"
-        USER_PYTHONPATH="$PYTHONPATH"
-
-        if [ $(command -v ngrok) ] && [ $(command -v gunicorn) ]
-        then
-                printf "\n[${green}+$NC] ngrok and gunicorn installed......lets go"
-                sleep 1
-        fi
-        if [ ! $(command -v ngrok) ]
-        then
-                printf "\n[${green}+$NC] ngrok not installed\n"
-                sleep 1
-                read -rp $'[\033[0;92m+\033[0m] Do you want to install ngrok? (Y/N): ' response
-                case "$response" in
-                        [yY])
-                                if curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list > /dev/null 2>&1 && sudo apt update > /dev/null 2>&1 && sudo apt install ngrok > /dev/null 2>&1; then
-                                        if [ $(command -v ngrok) ]
-                                        then
-                                                printf "[${green}+$NC] ngrok successfully installed"
-                                                printf "\n[${green}+$NC] Sign up for an account: https://dashboard.ngrok.com/signup, then get your auth token at https://dashboard.ngrok.com/get-started/your-authtoken and enter it below :\n"
-                                                read -rp $'[\033[0;92m+\033[0m] Enter ngrok auth token:  ' auth_token
-                                                if ngrok config add-authtoken $auth_token > /dev/null 2>&1; then
-                                                        printf "[${green}+$NC] auth token added!"
-                                                fi
-                                                sleep 1
-                                                #return 0
-                                        fi
-                                fi
-                        ;;
-                        [nN*])
-                                printf "\n[${green}+$NC] No Probs......Exiting"
-                                sleep 1
-                                exit 1
-                        ;;
-                esac
-        fi
-        if [ ! $(command -v gunicorn) ]
-        then
-                printf "\n[${green}+$NC] gunicorn not installed\n"
-                sleep 1
-                read -rp $'[\033[0;92m+\033[0m] Do you want to install gunicorn? (Y/N): ' response
-                case "$response" in
-                        [yY])
-                                if apt install gunicorn -y > /dev/null 2>&1; then
-                                        if [ $(command -v gunicorn) ]
-                                        then
-                                                printf "[${green}+$NC] gunicorn successfully installed"
-                                                sleep 1
-                                        fi
-                                fi
-                        ;;
-                        [nN*])
-                                printf "\n[${green}+$NC] No Probs......Exiting"
-                                sleep 1
-                                exit 1
-                        ;;
-                esac
-                sleep 1
-        fi
-        printf "\n[$green+$NC] Pulling duppy repo"
-        directory="duppy/"
-        if [ -d "$directory" ]; then
-                printf "\n[$green+$NC] duppy already installed"
-        elif git clone https://github.com/deeexcee-io/duppy.git > /dev/null 2>&1; then
-                printf "\n[$green+$NC] duppy installed"
+update_apt_cache_once() {
+    if [ "$APT_UPDATED" -eq 0 ]; then
+        log_info "Updating package index"
+        if run_privileged apt-get update -y > /dev/null 2>&1; then
+            APT_UPDATED=1
         else
-                printf "\n[$green+$NC] error pulling repo....exiting"
-                exit 1
+            log_error "Cannot update package index. Exiting."
+            exit 1
         fi
+    fi
 }
 
-# Function to start Gunicorn
+install_apt_package() {
+    local package=$1
+    update_apt_cache_once
+    if run_privileged apt-get install -y "$package" > /dev/null 2>&1; then
+        log_info "$package installed"
+    else
+        log_error "Failed to install $package"
+        exit 1
+    fi
+}
+
+ensure_command() {
+    local cmd=$1
+    local package=$2
+    if command_exists "$cmd"; then
+        return
+    fi
+    log_warn "$cmd not found. Installing $package."
+    install_apt_package "$package"
+}
+
+install_python_module() {
+    local module=$1
+    log_info "Installing python module ${module}"
+    if "$PYTHON_BIN" -m pip install "$module" > /dev/null 2>&1; then
+        log_info "${module} installed"
+    else
+        log_error "Unable to install python module ${module}"
+        exit 1
+    fi
+}
+
+ensure_pip_in_venv() {
+    if "$PYTHON_BIN" -m pip --version > /dev/null 2>&1; then
+        return
+    fi
+
+    log_warn "Python virtual environment is missing pip, attempting to bootstrap it"
+    if "$PYTHON_BIN" -m ensurepip --upgrade > /dev/null 2>&1; then
+        log_info "pip installed in virtual environment"
+    else
+        log_error "Unable to install pip inside the virtual environment"
+        exit 1
+    fi
+}
+
+ensure_virtualenv() {
+    if [ -x "$PYTHON_BIN" ]; then
+        ensure_pip_in_venv
+        if [ "$USING_USER_VENV" -eq 1 ]; then
+            log_info "Using active python virtual environment at ${VENV_DIR}"
+        else
+            log_info "Using python virtual environment at ${VENV_DIR}"
+        fi
+        return
+    fi
+
+    if [ "$USING_USER_VENV" -eq 1 ]; then
+        log_error "Active virtual environment at ${VENV_DIR} does not provide python3"
+        exit 1
+    fi
+
+    log_info "Creating python virtual environment in ${VENV_DIR}"
+    if python3 -m venv "$VENV_DIR" > /dev/null 2>&1; then
+        log_info "Virtual environment created"
+    else
+        log_error "Unable to create python virtual environment"
+        exit 1
+    fi
+
+    ensure_pip_in_venv
+}
+
+ensure_tls_certificate() {
+    if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ]; then
+        log_info "Using existing TLS certificate (${CERT_FILE})"
+        return
+    fi
+
+    log_info "Generating self-signed TLS certificate for local mode"
+    if mkdir -p "$CERT_DIR" && openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$KEY_FILE" -out "$CERT_FILE" -subj "/CN=duppy.local" > /dev/null 2>&1; then
+        log_info "TLS certificate created at ${CERT_DIR}"
+    else
+        log_error "Failed to create TLS certificate in ${CERT_DIR}"
+        exit 1
+    fi
+}
+
+prompt_yes_no() {
+    local prompt=$1
+    local response
+    while true; do
+        read -r -p "[?] ${prompt} [y/n]: " response
+        case "${response,,}" in
+            y|yes) return 0 ;;
+            n|no) return 1 ;;
+            *) log_warn "Please enter yes or no." ;;
+        esac
+    done
+}
+
+install_ngrok() {
+    log_info "Adding ngrok apt repository"
+    if ! run_privileged curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc -o /etc/apt/trusted.gpg.d/ngrok.asc; then
+        log_error "Failed to download ngrok signing key"
+        exit 1
+    fi
+    if ! printf "deb https://ngrok-agent.s3.amazonaws.com buster main\n" | run_privileged tee /etc/apt/sources.list.d/ngrok.list > /dev/null; then
+        log_error "Failed to configure ngrok repository"
+        exit 1
+    fi
+    APT_UPDATED=0
+    install_apt_package ngrok
+}
+
+configure_ngrok_auth() {
+    local config_file="${HOME}/.config/ngrok/ngrok.yml"
+    if [ -f "$config_file" ] && grep -q "authtoken" "$config_file" 2>/dev/null; then
+        return
+    fi
+
+    log_info "Ngrok auth token not detected."
+    read -r -p "[?] Enter ngrok auth token (leave blank to skip): " auth_token
+    if [ -n "${auth_token:-}" ]; then
+        if ngrok config add-authtoken "$auth_token" > /dev/null 2>&1; then
+            log_info "Auth token added"
+        else
+            log_warn "Unable to add auth token automatically. Please configure it manually."
+        fi
+    fi
+}
+
+ensure_ngrok() {
+    if command_exists ngrok; then
+        log_info "ngrok already installed"
+    else
+        log_warn "ngrok is not installed"
+        if prompt_yes_no "Install ngrok now?"; then
+            install_ngrok
+        else
+            log_error "ngrok is required. Exiting."
+            exit 1
+        fi
+    fi
+    configure_ngrok_auth
+}
+
+ensure_gunicorn() {
+    if "$PYTHON_BIN" -c "import gunicorn" > /dev/null 2>&1; then
+        log_info "gunicorn already installed"
+        return
+    fi
+
+    log_warn "gunicorn python module is not installed"
+    if prompt_yes_no "Install gunicorn now?"; then
+        install_python_module gunicorn
+    else
+        log_error "gunicorn is required. Exiting."
+        exit 1
+    fi
+}
+
+ensure_flask() {
+    if "$PYTHON_BIN" -c "import flask" > /dev/null 2>&1; then
+        log_info "Flask already installed"
+        return
+    fi
+    install_python_module flask
+}
+
+ensure_base_dependencies() {
+    ensure_command curl curl
+    ensure_command jq jq
+    ensure_command git git
+    ensure_command pgrep procps
+    ensure_command python3 python3
+    ensure_command openssl openssl
+    if ! python3 -m pip --version > /dev/null 2>&1; then
+        log_warn "python3-pip not found. Installing."
+        install_apt_package python3-pip
+    fi
+    if ! python3 -m venv --help > /dev/null 2>&1; then
+        log_warn "python3-venv not found. Installing."
+        install_apt_package python3-venv
+    fi
+}
+
+resolve_project_dir() {
+    local script_root="$SCRIPT_ROOT"
+
+    if [ -f "${script_root}/Uploader.py" ]; then
+        PROJECT_DIR="${script_root}"
+        return
+    fi
+
+    if [ -d "${script_root}/duppy" ] && [ -f "${script_root}/duppy/Uploader.py" ]; then
+        PROJECT_DIR="${script_root}/duppy"
+        return
+    fi
+
+    log_info "Pulling duppy repository"
+    if git clone https://github.com/deeexcee-io/duppy.git "${script_root}/duppy" > /dev/null 2>&1; then
+        PROJECT_DIR="${script_root}/duppy"
+        log_info "duppy repository cloned"
+    else
+        log_error "Unable to clone duppy repository"
+        exit 1
+    fi
+}
+
 start_gunicorn() {
-    USER_PATH="$PATH"
-    USER_PYTHONPATH="$PYTHONPATH"
-    script_dir=$(dirname "{BASH_SOURCE[0]}")
-    relative_dir="/duppy"
-    if gunicorn -D -w 2 -b 127.0.0.1:8000 --chdir "$script_dir$relative_dir" Uploader:Uploader; then
-        printf "\n[$green+$NC] gunicorn started"
-        sleep 1
+    log_info "Starting gunicorn server"
+    local gunicorn_args=(-D -w 2 -b "${BIND_ADDRESS}:8000" --chdir "$PROJECT_DIR")
+    if [ "$RUN_MODE" == "local" ]; then
+        ensure_tls_certificate
+        gunicorn_args+=(--keyfile "$KEY_FILE" --certfile "$CERT_FILE")
+    fi
+    if "$PYTHON_BIN" -m gunicorn "${gunicorn_args[@]}" Uploader:Uploader > /dev/null 2>&1; then
+        log_info "gunicorn started successfully"
     else
-        printf "\ngunicorn failed"
+        log_error "gunicorn failed to start"
         exit 1
     fi
 }
 
-# Function to start Ngrok with basic authentication
 start_ngrok() {
-    #current_user=$SUDO_USER
-    ngrok http 8000 --basic-auth="user:SuperPassword" > /dev/null 2>&1 &
+    log_info "Starting ngrok tunnel on port 8000"
+    ngrok http 8000 --basic-auth="$BASIC_AUTH" > "$LOG_FILE" 2>&1 &
+    NGROK_PID=$!
     sleep 1
-    # Check if Ngrok started successfully
-    if pgrep -x "ngrok" > /dev/null; then
-        printf "\n[$green+$NC] ngrok started successfully"
-        sleep 1
+    if ps -p "$NGROK_PID" > /dev/null 2>&1; then
+        log_info "ngrok started successfully (pid ${NGROK_PID})"
     else
-        printf "\nngrok failed to start"
+        log_error "ngrok failed to start. Check ${LOG_FILE} for details."
         exit 1
     fi
 }
 
-# Function to get Ngrok public URL
 get_ngrok_public_url() {
-    public_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-    printf "\n[$green+$NC] Public URL: $green$public_url$NC"
-}
-
-# Function to check Ngrok API for incoming requests
-check_ngrok_api() {
-    # Use curl to get Ngrok API data for the latest request
-    api_data=$(curl -s "$NGROK_URL")
-
-    #pwd
-    cwd="duppy/upload/"
-    # Extract and display the details of the latest GET request
-    latest_request=$(echo "$api_data" | jq -r '.requests[0]' | jq -r '.request.uri')
-    latest_response=$(echo "$api_data" | jq -r '.requests[0]' | jq -r '.response.status')
-
-    if [ -n "$api_data" ] && [ "$latest_request" != "null" ] && [ "$latest_response" != "null" ]; then
-        if [ "$api_data" != "$api_hist" ]; then
-            #printf "\n[$green---$NC]Request details URL: $green$latest_request$NC Status Code: $green$latest_response$NC"
-            if [ "$latest_request" == "/done" ]; then
-                sleep 3
-                uploaded_file=$(ls -t $cwd| head -n1)
-                printf "\n[$green+$NC] New File Uploaded: $green$uploaded_file$NC"
-            elif [[ "$latest_request" == "/download/"* ]];then
-                downloaded_file="${latest_request#"/download/"}"
-                printf "\n[$green+$NC] New File Downloaded: $green$downloaded_file$NC"
+    local attempt
+    local public_url=""
+    for attempt in $(seq 1 15); do
+        if response=$(curl -sf http://127.0.0.1:4040/api/tunnels); then
+            public_url=$(echo "$response" | jq -r '.tunnels[0].public_url // empty')
+            if [ -n "$public_url" ]; then
+                printf "\n[${green}+${NC}] Public URL: ${green}%s${NC}" "$public_url"
+                return
             fi
-        api_hist=$api_data
         fi
-    fi
+        sleep 1
+    done
+    log_warn "Unable to determine ngrok public URL"
 }
 
-# Function to handle cleanup on Ctrl+C
+check_ngrok_api() {
+    local api_data=""
+    if ! api_data=$(curl -sf "$NGROK_URL" 2> /dev/null); then
+        return
+    fi
+
+    local latest_request
+    local latest_response
+    latest_request=$(echo "$api_data" | jq -r '.requests[0].request.uri // empty')
+    latest_response=$(echo "$api_data" | jq -r '.requests[0].response.status // empty')
+
+    if [ -z "$latest_request" ] || [ -z "$latest_response" ]; then
+        return
+    fi
+
+    if [ "$api_data" == "$api_hist" ]; then
+        return
+    fi
+
+    local request_path="$latest_request"
+    request_path="${request_path%%\?*}"
+    if [ -n "$request_path" ] && [ "$request_path" != "/" ]; then
+        request_path="${request_path%/}"
+    fi
+
+    local upload_dir="${PROJECT_DIR}/upload"
+    if [ "$request_path" == "/done" ]; then
+        sleep 1
+        if [ -d "$upload_dir" ]; then
+            local uploaded_file
+            uploaded_file=$(ls -1t "$upload_dir" 2> /dev/null | head -n 1)
+            if [ -n "$uploaded_file" ]; then
+                printf "\n[${green}+${NC}] New File Uploaded: ${green}%s${NC}" "$uploaded_file"
+            fi
+        fi
+    elif [[ "$request_path" == /download/* ]]; then
+        local downloaded_file="${request_path#/download/}"
+        printf "\n[${green}+${NC}] New File Downloaded: ${green}%s${NC}" "$downloaded_file"
+    fi
+
+    api_hist="$api_data"
+}
+
+print_local_access_info() {
+    local host_ip
+    host_ip=$(hostname -I 2> /dev/null | awk '{print $1}')
+    if [ -z "$host_ip" ]; then
+        host_ip="127.0.0.1"
+    fi
+    printf "\n[${green}+${NC}] Local access URL: ${green}https://%s:8000${NC}" "$host_ip"
+    printf "\n[${green}+${NC}] Certificate path: ${CERT_FILE}"
+    printf "\n[${green}+${NC}] Share/trust the certificate so testers avoid warnings."
+}
+
 cleanup() {
-    echo -e "\nCtrl+C pressed. Cleaning up..."
-    # Find the PID of the Gunicorn process
-    gunicorn_pid=$(pgrep -o "gunicorn")
-    if [ -n "$gunicorn_pid" ]; then
-        printf "\nTerminating Gunicorn process with PID: $gunicorn_pid"
-        kill $gunicorn_pid
+    printf "\n\n${yellow}Shutting down...${NC}\n"
+    if pkill -f "gunicorn.*Uploader:Uploader" > /dev/null 2>&1; then
+        log_info "gunicorn stopped"
     else
-        printf "\nNo Gunicorn process found"
+        log_warn "gunicorn process not found"
+    fi
+
+    if [ -n "$NGROK_PID" ] && ps -p "$NGROK_PID" > /dev/null 2>&1; then
+        kill "$NGROK_PID"
+        log_info "ngrok stopped"
+    else
+        pkill -x ngrok > /dev/null 2>&1 || true
     fi
     exit 0
 }
 
-# Trap Ctrl+C and call the cleanup function
-trap cleanup SIGINT
+trap cleanup SIGINT SIGTERM
 
-# Main function to start and monitor Gunicorn and Ngrok
 main() {
-    start_standardtoolcheck
-    start_precheck
+    choose_run_mode
+    ensure_base_dependencies
+    ensure_virtualenv
+    ensure_flask
+    ensure_gunicorn
+    resolve_project_dir
     start_gunicorn
-    start_ngrok
-    get_ngrok_public_url
 
-    # Your Ngrok tunnel's public URL
-    NGROK_URL="http://localhost:4040/api/requests/http?limit=1"
+    if [ "$RUN_MODE" == "internet" ]; then
+        ensure_ngrok
+        start_ngrok
+        get_ngrok_public_url
 
-    # Main loop
-    while true; do
-        check_ngrok_api
-
-        # Sleep for a specific interval (e.g., 3 seconds)
-        sleep 0.1
-    done
+        while true; do
+            check_ngrok_api
+            sleep 0.5
+        done
+    else
+        print_local_access_info
+        while true; do
+            sleep 2
+        done
+    fi
 }
 
-# Run the main function
 main

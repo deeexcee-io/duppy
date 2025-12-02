@@ -5,73 +5,208 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duppy - Upload Files</title>
+    <title>Duppy</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            margin: 20px;
+        :root {
+            color-scheme: light;
         }
 
-        h1 {
-            color: #007bff;
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f4f6fb;
+            color: #13264b;
+            display: flex;
+            padding: 48px 5vw;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 960px;
+            margin: auto;
+            border-radius: 24px;
+            padding: 48px;
+            background: #ffffff;
+            box-shadow: 0 25px 70px rgba(12, 30, 61, 0.12);
+            border: 1px solid rgba(19, 38, 75, 0.05);
+        }
+
+        header {
+            margin-bottom: 32px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: space-between;
+        }
+
+        .brand img {
+            height: 42px;
+            width: auto;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: #f06427;
+            padding: 6px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(240, 100, 39, 0.25);
+            background: rgba(240, 100, 39, 0.08);
+            white-space: nowrap;
+        }
+
+        .card {
+            padding: 28px;
+            border: 1px solid rgba(19, 38, 75, 0.08);
+            border-radius: 18px;
+            margin-bottom: 28px;
+            background: #fdfdff;
         }
 
         form {
-            margin: 20px 0;
+            margin: 0;
         }
 
-        input[type="file"] {
-            padding: 10px;
-            margin-right: 10px;
-            background-color: #007bff;
-            color: #fff;
+        .file-input {
+            padding: 20px;
+            border: 2px dashed rgba(19, 38, 75, 0.2);
+            border-radius: 14px;
+            background: rgba(20, 39, 75, 0.03);
+        }
+
+        .file-input input[type="file"] {
+            width: 100%;
+            font-family: inherit;
+            color: #13264b;
+        }
+
+        .actions {
+            margin-top: 24px;
+        }
+
+        button,
+        .primary-btn,
+        .secondary-btn {
             border: none;
+            border-radius: 999px;
+            padding: 12px 28px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 600;
             cursor: pointer;
+            letter-spacing: 0.05em;
         }
 
-        input[type="submit"],
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
+        .primary-btn {
+            background: linear-gradient(120deg, #f06427, #f37a24);
             color: #fff;
-            border: none;
-            cursor: pointer;
+            box-shadow: 0 15px 30px rgba(240, 100, 39, 0.25);
         }
 
-        ul {
-            list-style-type: none;
+        .secondary-btn {
+            border: 1px solid rgba(19, 38, 75, 0.2);
+            background: transparent;
+            color: #13264b;
+        }
+
+        button:hover,
+        .primary-btn:hover,
+        .secondary-btn:hover {
+            opacity: 0.92;
+        }
+
+        .file-grid {
+            list-style: none;
             padding: 0;
+            margin: 16px 0 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
         }
 
-        li {
-            margin-bottom: 5px;
+        .file-pill {
+            display: block;
+            border: 1px solid rgba(19, 38, 75, 0.12);
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.95rem;
+            text-decoration: none;
+            color: #13264b;
+            box-shadow: inset 0 0 0 0 rgba(19, 38, 75, 0.05);
         }
 
-        button {
-            background-color: #28a745;
+        .file-pill:hover {
+            border-color: rgba(240, 100, 39, 0.35);
+            box-shadow: inset 0 0 0 1px rgba(240, 100, 39, 0.15);
+        }
+
+        .section-heading h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            letter-spacing: 0.15em;
+            color: rgba(19, 38, 75, 0.7);
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .page {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Duppy - Upload New File</h1>
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Send it">
-    </form>
-    <h2>File List:</h2>
-    <ul>
-        {% for file in file_list %}
-        <li>{{ file }}</li>
-        {% endfor %}
-    </ul>
+    <div class="page">
+        <header>
+            <div class="brand">
+                <img src="https://cdn.prod.website-files.com/5f02f2c93eab87a6ea84e2f3/61bb2e0599c8bcf1c593c4c3_CCL_LOGO_FINAL_1.svg" alt="CCL Solutions Group logo">
+                <h1 class="brand-title">duppy - download upload python app</h1>
+            </div>
+        </header>
 
-    <!-- Button to go to /download -->
-    <form action="/download" method="get">
-        <button type="submit">Go to Download</button>
-    </form>
+        <section class="card upload-card">
+            <form method="post" enctype="multipart/form-data">
+                <div class="file-input">
+                    <input type="file" name="file" id="file-input" required>
+                </div>
+                <div class="actions">
+                    <button class="primary-btn" type="submit">upload &gt;&gt;</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-heading">
+                <h3>staged files</h3>
+            </div>
+            <ul class="file-grid">
+                {% for file in file_list %}
+                <li>
+                    <a class="file-pill" href="{{ url_for('down_file', filename=file) }}" download>{{ file }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
 </body>
 
 </html>

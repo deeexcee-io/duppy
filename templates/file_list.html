@@ -5,65 +5,176 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duppy - File List</title>
+    <title>Duppy · Downloads</title>
     <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            margin: 20px;
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+            background: #f4f6fb;
+            color: #13264b;
+            display: flex;
+            padding: 48px 5vw;
         }
 
-        h2 {
-            color: #007bff;
+        .page {
+            width: 100%;
+            max-width: 920px;
+            margin: auto;
+            border-radius: 24px;
+            padding: 40px;
+            background: #fff;
+            box-shadow: 0 20px 60px rgba(13, 22, 43, 0.12);
         }
 
-        ul {
-            list-style-type: none;
+        h1 {
+            margin: 0 0 20px;
+            font-size: 2rem;
+            letter-spacing: 0.05em;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .brand img {
+            height: 42px;
+            width: auto;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: #f06427;
+            padding: 6px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(240, 100, 39, 0.25);
+            background: rgba(240, 100, 39, 0.08);
+            white-space: nowrap;
+        }
+
+        .card {
+            border: 1px solid rgba(19, 38, 75, 0.08);
+            border-radius: 18px;
+            padding: 24px;
+            background: #fdfdff;
+        }
+
+        .file-list {
+            list-style: none;
             padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        li {
-            margin-bottom: 10px;
-        }
-
-        a {
+        .file-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border: 1px solid rgba(19, 38, 75, 0.12);
+            border-radius: 12px;
             text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
+            color: inherit;
+            background: #fff;
+            transition: border 0.15s ease, box-shadow 0.15s ease;
         }
 
-        a:hover {
-            text-decoration: underline;
+        .file-entry:hover {
+            border-color: rgba(240, 100, 39, 0.35);
+            box-shadow: 0 8px 18px rgba(13, 22, 43, 0.08);
         }
 
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
+        .file-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .download-icon {
+            color: #f06427;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button,
+        .link-btn {
+            border-radius: 999px;
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            text-decoration: none;
+            border: 1px solid rgba(19, 38, 75, 0.15);
+            color: #13264b;
+            background: transparent;
             cursor: pointer;
+        }
+
+        .link-btn.primary {
+            border: none;
+            background: linear-gradient(120deg, #f06427, #f37a24);
+            color: #fff;
+            box-shadow: 0 15px 30px rgba(240, 100, 39, 0.2);
+        }
+
+        @media (max-width: 640px) {
+            .file-entry {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h2>Duppy - File List</h2>
+    <div class="page">
+        <div class="brand">
+            <img src="https://cdn.prod.website-files.com/5f02f2c93eab87a6ea84e2f3/61bb2e0599c8bcf1c593c4c3_CCL_LOGO_FINAL_1.svg" alt="CCL Solutions Group logo">
+            <h1 class="brand-title">duppy - download upload python app</h1>
+        </div>
+        <section class="card">
+            <ul class="file-list">
+                {% for file in file_list %}
+                <li>
+                    <a class="file-entry" href="{{ url_for('down_file', filename=file) }}" download>
+                        <span class="file-name">{{ file }}</span>
+                        <span class="download-icon">⬇</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
 
-    <ul>
-        {% for file in file_list %}
-            <li><a href="{{ url_for('down_file', filename=file) }}" download>{{ file }}</a></li>
-        {% endfor %}
-    </ul>
-
-    <!-- Button to go back -->
-    <button onclick="goBack()">Go Back</button>
-
-    <script>
-        function goBack() {
-            window.history.back();
-        }
-    </script>
+            <div class="actions">
+                <button type="button" onclick="window.history.back()">back</button>
+                <a class="link-btn primary" href="/">upload</a>
+            </div>
+        </section>
+    </div>
 </body>
 
 </html>

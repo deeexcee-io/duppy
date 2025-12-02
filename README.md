@@ -25,8 +25,18 @@ source duppy-venv/bin/activate
 
 wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 
-sudo bash duppy.sh
+chmod +x duppy.sh
+
+./duppy.sh
 ```
+
+Keep the virtual environment active while running `duppy.sh` so Flask, Gunicorn, and other Python modules are installed inside it. The script detects an already-activated environment and otherwise creates `./duppy-venv` before installing dependencies, and it uses `sudo` internally when system packages are required—no need to prefix the script with `sudo`.
+
+### Choosing how to expose the app
+
+When `duppy.sh` starts it now asks whether you want full internet exposure (via ngrok) or a local-network-only mode. Pick the internet option when you need the tunnel, or select the local option to bind Gunicorn to `0.0.0.0:8000` for peer-to-peer transfers on the same engagement network without ngrok. You can also skip the prompt by setting `DUPPY_MODE=internet` or `DUPPY_MODE=local` before launching the script.
+
+Local mode automatically generates (or reuses) a self-signed TLS certificate in `.tls/` and serves the app over HTTPS (`https://<host>:8000`). Distribute the certificate to teammates and trust it in their browsers to avoid warnings.
 ## w/cURL
 
 ```
@@ -74,21 +84,11 @@ Local files accessible with upload/download functionality
 
 ![image](https://github.com/deeexcee-io/duppy/assets/130473605/7350310a-6e14-42a1-a4af-171e32bbb978)
 
-app is protected with basic auth - update the creds in duppy.sh
+The app is protected with HTTP basic auth. Customize the credentials by setting the `DUPPY_BASIC_AUTH` environment variable before launching `duppy.sh`, for example:
 
-```
-start_ngrok() {
-    #current_user=$SUDO_USER
-    ngrok http 8000 --basic-auth="user:SuperPassword" > /dev/null 2>&1 &
-    sleep 1
-    # Check if Ngrok started successfully
-    if pgrep -x "ngrok" > /dev/null; then
-        printf "\n[$green+$NC] ngrok started successfully"
-        sleep 1
-    else
-        printf "\nngrok failed to start"
-        exit 1
-    fi
-}
+```bash
+export DUPPY_BASIC_AUTH="alice:Use-A-Strong-Password"
+./duppy.sh
 ```
 
+If the variable is not set, the script defaults to `user:SuperPassword`.
