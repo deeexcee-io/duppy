@@ -33,4 +33,4 @@ The launcher prompts for mode selection unless you export `DUPPY_MODE=internet` 
 
 ## Authentication & environment
 
-HTTP basic auth protects both modes. Override the default `user:SuperPassword` combination with `DUPPY_BASIC_AUTH="username:password"`. `DUPPY_REQUIRE_BASIC_AUTH` is set automatically, so no extra wiring is needed in the Flask app.
+HTTP basic auth protects both modes. Override the default `user:SuperPassword` combination with `DUPPY_BASIC_AUTH="username:password"`. `DUPPY_REQUIRE_BASIC_AUTH` is set automatically, so no extra config is needed in the Flask app.
