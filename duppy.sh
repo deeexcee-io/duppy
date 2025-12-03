@@ -36,6 +36,7 @@ BIND_ADDRESS="127.0.0.1"
 CERT_DIR="${SCRIPT_ROOT}/.tls"
 CERT_FILE="${CERT_DIR}/duppy.crt"
 KEY_FILE="${CERT_DIR}/duppy.key"
+NGROK_DOMAIN="${DUPPY_NGROK_DOMAIN:-}"
 
 if [ -n "${VIRTUAL_ENV:-}" ]; then
     VENV_DIR="${VIRTUAL_ENV%/}"
@@ -161,6 +162,19 @@ install_python_module() {
     fi
 }
 
+bootstrap_pip_with_get_pip() {
+    local get_pip
+    get_pip=$(mktemp -t duppy-get-pip-XXXXXX.py)
+    if curl -fsSL https://bootstrap.pypa.io/get-pip.py -o "$get_pip"; then
+        if "$PYTHON_BIN" "$get_pip" > /dev/null 2>&1; then
+            rm -f "$get_pip"
+            return 0
+        fi
+    fi
+    rm -f "$get_pip"
+    return 1
+}
+
 ensure_pip_in_venv() {
     if "$PYTHON_BIN" -m pip --version > /dev/null 2>&1; then
         return
@@ -169,10 +183,17 @@ ensure_pip_in_venv() {
     log_warn "Python virtual environment is missing pip, attempting to bootstrap it"
     if "$PYTHON_BIN" -m ensurepip --upgrade > /dev/null 2>&1; then
         log_info "pip installed in virtual environment"
-    else
-        log_error "Unable to install pip inside the virtual environment"
-        exit 1
+        return
     fi
+
+    log_warn "ensurepip unavailable. Falling back to get-pip bootstrap"
+    if bootstrap_pip_with_get_pip; then
+        log_info "pip installed in virtual environment"
+        return
+    fi
+
+    log_error "Unable to install pip inside the virtual environment"
+    exit 1
 }
 
 ensure_virtualenv() {
@@ -300,6 +321,15 @@ ensure_flask() {
     install_python_module flask
 }
 
+configure_app_auth_env() {
+    export DUPPY_BASIC_AUTH="$BASIC_AUTH"
+    if [ "$RUN_MODE" == "local" ]; then
+        export DUPPY_REQUIRE_BASIC_AUTH="1"
+    else
+        export DUPPY_REQUIRE_BASIC_AUTH="0"
+    fi
+}
+
 ensure_base_dependencies() {
     ensure_command curl curl
     ensure_command jq jq
@@ -357,7 +387,12 @@ start_gunicorn() {
 
 start_ngrok() {
     log_info "Starting ngrok tunnel on port 8000"
-    ngrok http 8000 --basic-auth="$BASIC_AUTH" > "$LOG_FILE" 2>&1 &
+    local ngrok_args=(http 8000 --basic-auth="$BASIC_AUTH")
+    if [ -n "$NGROK_DOMAIN" ]; then
+        log_info "Using custom ngrok domain ${NGROK_DOMAIN}"
+        ngrok_args+=(--domain="$NGROK_DOMAIN")
+    fi
+    ngrok "${ngrok_args[@]}" > "$LOG_FILE" 2>&1 &
     NGROK_PID=$!
     sleep 1
     if ps -p "$NGROK_PID" > /dev/null 2>&1; then
@@ -464,6 +499,7 @@ main() {
     ensure_flask
     ensure_gunicorn
     resolve_project_dir
+    configure_app_auth_env
     start_gunicorn
 
     if [ "$RUN_MODE" == "internet" ]; then
