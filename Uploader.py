@@ -10,7 +10,21 @@ UPLOAD_FOLDER_DEFAULT = os.path.join(os.getcwd(), 'upload')
 Uploader.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_DEFAULT
 Uploader.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'exe'])
+# Accept a wide range of common document, media and archive extensions.
+ALLOWED_EXTENSIONS = {
+    # Documents
+    'txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'rtf',
+    # Data / structured text
+    'csv', 'tsv', 'json', 'xml', 'yaml', 'yml',
+    # Images
+    'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp',
+    # Audio / video
+    'mp3', 'wav', 'flac', 'aac', 'ogg', 'mp4', 'mov', 'mkv', 'avi', 'wmv',
+    # Archives
+    'zip', 'gz', 'tar', 'tgz', 'rar', '7z',
+    # Misc
+    'exe', 'html', 'css', 'js', 'py'
+}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 

@@ -10,8 +10,16 @@
 
 ## Run it
 
+Clone the repository locally so the launcher script and templates stay together:
+
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
+git clone https://github.com/deeexcee-io/duppy.git
+cd duppy
+```
+
+Then execute the launcher from the cloned directory:
+
+```bash
 chmod +x duppy.sh
 ./duppy.sh
 ```
