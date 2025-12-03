@@ -1,34 +1,28 @@
 # duppy
 
-`duppy.sh` provisions a small Flask application (served by Gunicorn) that lets you upload and download files from your workstation. It can either expose the service through an ngrok tunnel or keep it limited to the local network with self-signed TLS.
+`duppy.sh` is a single script that prepares a Flask + Gunicorn file drop box and exposes it either to the internet through ngrok or to the local network with self-signed TLS. It installs everything it needs (system tools, a virtual environment, Flask, Gunicorn, ngrok, TLS assets) and tears them down cleanly when you exit.
 
 ## Requirements
 
-- Python 3 with `venv`
-- `wget` (or curl) to grab the bootstrap script
-- Free ngrok account and auth token: https://dashboard.ngrok.com/get-started/your-authtoken
+- Python 3 with `venv` (the script creates or reuses `duppy-venv`, or you may activate one manually)
+- Ability to download the script (e.g., `curl` or `wget`)
+- Optional: free ngrok account + auth token if you want the internet-facing mode
 
-Tested on Kali Linux (bare metal and WSL).
-
-## Quick start
+## Run it
 
 ```bash
-python3 -m venv duppy-venv
-source duppy-venv/bin/activate
-wget https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
+curl -fsSLO https://raw.githubusercontent.com/deeexcee-io/duppy/main/duppy.sh
 chmod +x duppy.sh
 ./duppy.sh
 ```
 
-Keep the virtual environment active while running `duppy.sh`; dependencies are installed inside it. The script creates the environment if one is not already active.
+The launcher prompts for mode selection unless you export `DUPPY_MODE=internet` or `DUPPY_MODE=local`. It also asks before installing `ngrok` or `gunicorn` if they are missing.
 
-## Operating modes
+## Modes
 
-- **Internet:** uses ngrok to publish a tunnel and prints the public HTTPS URL.
-- **Local:** binds to `0.0.0.0:8000` with a self-signed certificate stored in `.tls/`.
+- **Internet:** runs Gunicorn on `127.0.0.1:8000`, starts an ngrok tunnel (optionally bound to `DUPPY_NGROK_DOMAIN`), and prints the public HTTPS URL along with upload/download activity pulled from the ngrok API.
+- **Local:** binds to `0.0.0.0:8000`, autogenerates `.tls/duppy.(crt|key)`, and prints the LAN URL to share. Basic auth enforcement is mandatory in this mode.
 
-Set `DUPPY_MODE=internet` or `DUPPY_MODE=local` before launching the script to skip the mode prompt.
+## Authentication & environment
 
-## Authentication
-
-The web UI and upload endpoint use HTTP basic auth. Override the default credentials by exporting `DUPPY_BASIC_AUTH="username:password"` prior to running `./duppy.sh`.
+HTTP basic auth protects both modes. Override the default `user:SuperPassword` combination with `DUPPY_BASIC_AUTH="username:password"`. `DUPPY_REQUIRE_BASIC_AUTH` is set automatically, so no extra wiring is needed in the Flask app.
